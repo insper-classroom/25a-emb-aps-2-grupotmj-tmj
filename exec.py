@@ -13,6 +13,7 @@
 #     print("Erro ao abrir a porta serial:", e)
 #     exit(1)
 
+
 # time.sleep(2)  # Aguarda a estabilização da conexão
 
 # print("Conectado. Iniciando controle...")
