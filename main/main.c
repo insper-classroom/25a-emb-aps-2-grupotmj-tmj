@@ -1,137 +1,141 @@
-/*
- * LED blink with FreeRTOS
- */
-#include <FreeRTOS.h>
-#include <task.h>
-#include <semphr.h>
-#include <queue.h>
-
-#include "ssd1306.h"
-#include "gfx.h"
-
 #include "pico/stdlib.h"
+#include "hardware/uart.h"
+#include "hardware/gpio.h"
+#include "hardware/adc.h"
 #include <stdio.h>
+#include <string.h>
 
-const uint BTN_1_OLED = 28;
-const uint BTN_2_OLED = 26;
-const uint BTN_3_OLED = 27;
+// Configurações do UART (utilizando UART0 como exemplo)
+#define UART_ID         uart0
+#define BAUD_RATE       115200
+#define UART_TX_PIN     0      // Por exemplo, GP0
+#define UART_RX_PIN     1      // Por exemplo, GP1
 
-const uint LED_1_OLED = 20;
-const uint LED_2_OLED = 21;
-const uint LED_3_OLED = 22;
+// Configurações do HC-06
+#define HC06_UART        uart1            // Usaremos a UART1
+#define HC06_BAUD_RATE   9600             // Baud rate padrão do HC-06
 
-void oled1_btn_led_init(void) {
-    gpio_init(LED_1_OLED);
-    gpio_set_dir(LED_1_OLED, GPIO_OUT);
+// Pinos para UART1 na Pico (exemplo comum para a Pico W)
+#define HC06_UART_TX_PIN 4                // Pico TX (UART1) → ligado ao HC-06 RX
+#define HC06_UART_RX_PIN 5                // Pico RX (UART1) ← ligado ao HC-06 TX
 
-    gpio_init(LED_2_OLED);
-    gpio_set_dir(LED_2_OLED, GPIO_OUT);
+// Pinos de controle do módulo HC-06
+#define HC06_STATE_PIN   2                // Estado do bluetooth (opcional)
+#define HC06_EN_PIN      3                // Pino Enable (ativo em nível baixo)
 
-    gpio_init(LED_3_OLED);
-    gpio_set_dir(LED_3_OLED, GPIO_OUT);
+// Pinos para o ADC (conectados aos eixos do joystick)
+#define ADC_CHANNEL_X   0      // GPIO26 (ADC0)
+#define ADC_CHANNEL_Y   1      // GPIO27 (ADC1)
 
-    gpio_init(BTN_1_OLED);
-    gpio_set_dir(BTN_1_OLED, GPIO_IN);
-    gpio_pull_up(BTN_1_OLED);
+// Valor central do ADC para 12 bits: aproximadamente 2048
+#define ADC_CENTRAL     2048
+// Limiar para considerar movimento (zona morta)
+#define DEADZONE        1250    // Ajuste conforme necessário
 
-    gpio_init(BTN_2_OLED);
-    gpio_set_dir(BTN_2_OLED, GPIO_IN);
-    gpio_pull_up(BTN_2_OLED);
-
-    gpio_init(BTN_3_OLED);
-    gpio_set_dir(BTN_3_OLED, GPIO_IN);
-    gpio_pull_up(BTN_3_OLED);
+// Delay simples (você pode usar sleep_ms() diretamente)
+static inline void delay_ms_custom(uint32_t ms) {
+    sleep_ms(ms);
 }
 
-void oled1_demo_1(void *p) {
-    printf("Inicializando Driver\n");
-    ssd1306_init();
-
-    printf("Inicializando GLX\n");
-    ssd1306_t disp;
-    gfx_init(&disp, 128, 32);
-
-    printf("Inicializando btn and LEDs\n");
-    oled1_btn_led_init();
-
-    char cnt = 15;
-    while (1) {
-
-        if (gpio_get(BTN_1_OLED) == 0) {
-            cnt = 15;
-            gpio_put(LED_1_OLED, 0);
-            gfx_clear_buffer(&disp);
-            gfx_draw_string(&disp, 0, 0, 1, "LED 1 - ON");
-            gfx_show(&disp);
-        } else if (gpio_get(BTN_2_OLED) == 0) {
-            cnt = 15;
-            gpio_put(LED_2_OLED, 0);
-            gfx_clear_buffer(&disp);
-            gfx_draw_string(&disp, 0, 0, 1, "LED 2 - ON");
-            gfx_show(&disp);
-        } else if (gpio_get(BTN_3_OLED) == 0) {
-            cnt = 15;
-            gpio_put(LED_3_OLED, 0);
-            gfx_clear_buffer(&disp);
-            gfx_draw_string(&disp, 0, 0, 1, "LED 3 - ON");
-            gfx_show(&disp);
-        } else {
-
-            gpio_put(LED_1_OLED, 1);
-            gpio_put(LED_2_OLED, 1);
-            gpio_put(LED_3_OLED, 1);
-            gfx_clear_buffer(&disp);
-            gfx_draw_string(&disp, 0, 0, 1, "PRESSIONE ALGUM");
-            gfx_draw_string(&disp, 0, 10, 1, "BOTAO");
-            gfx_draw_line(&disp, 15, 27, cnt,
-                          27);
-            vTaskDelay(pdMS_TO_TICKS(50));
-            if (++cnt == 112)
-                cnt = 15;
-
-            gfx_show(&disp);
-        }
-    }
+// Função para enviar um comando AT ao HC-06
+void hc06_send_at_command(const char *cmd) {
+    uart_puts(HC06_UART, cmd);
+    uart_puts(HC06_UART, "\r\n");
+    delay_ms_custom(200);  // Aguarda 200 ms pela resposta
 }
 
-void oled1_demo_2(void *p) {
-    printf("Inicializando Driver\n");
-    ssd1306_init();
+// Função de inicialização do HC-06, configurando nome e PIN
+void hc06_init(const char *name, const char *pin) {
+    // Envia comando AT básico para testar a conexão
+    uart_puts(HC06_UART, "AT\r\n");
+    delay_ms_custom(500);
+    
+    // Configura o nome do módulo
+    char at_cmd[64];
+    sprintf(at_cmd, "AT+NAME=%s", name);
+    hc06_send_at_command(at_cmd);
+    
+    // Configura o PIN do módulo
+    sprintf(at_cmd, "AT+PIN=%s", pin);
+    hc06_send_at_command(at_cmd);
+}
 
-    printf("Inicializando GLX\n");
-    ssd1306_t disp;
-    gfx_init(&disp, 128, 32);
+void init_uart(void) {
+    uart_init(UART_ID, BAUD_RATE);
+    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
+    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+}
 
-    printf("Inicializando btn and LEDs\n");
-    oled1_btn_led_init();
+void init_adc(void) {
+    adc_init();
+    adc_gpio_init(26);
+    adc_gpio_init(27);
+}
 
-    char cnt = 15;
-    while (1) {
-
-        gfx_clear_buffer(&disp);
-        gfx_draw_string(&disp, 0, 0, 1, "Mandioca");
-        gfx_show(&disp);
-        vTaskDelay(pdMS_TO_TICKS(150));
-
-        gfx_clear_buffer(&disp);
-        gfx_draw_string(&disp, 0, 0, 2, "Batata");
-        gfx_show(&disp);
-        vTaskDelay(pdMS_TO_TICKS(150));
-
-        gfx_clear_buffer(&disp);
-        gfx_draw_string(&disp, 0, 0, 4, "Inhame");
-        gfx_show(&disp);
-        vTaskDelay(pdMS_TO_TICKS(150));
-    }
+uint16_t ler_adc(uint8_t canal) {
+    adc_select_input(canal);
+    return adc_read();
 }
 
 int main() {
+    // Inicializa o stdio (por exemplo, para debug via USB serial)
     stdio_init_all();
+    
+    // Inicializa a UART1 com a baud rate definida para o HC-06
+    // uart_init(HC06_UART, HC06_BAUD_RATE);
+    // gpio_set_function(HC06_UART_TX_PIN, GPIO_FUNC_UART);
+    // gpio_set_function(HC06_UART_RX_PIN, GPIO_FUNC_UART);
+    
+    // Configura os pinos de controle
+    // gpio_init(HC06_STATE_PIN);
+    // gpio_set_dir(HC06_STATE_PIN, GPIO_IN);
+    
+    // gpio_init(HC06_EN_PIN);
+    // gpio_set_dir(HC06_EN_PIN, GPIO_OUT);
+    // Conforme o exemplo, coloque 0 em EN para habilitar o módulo
+    // gpio_put(HC06_EN_PIN, 0);
 
-    xTaskCreate(oled1_demo_2, "Demo 2", 4095, NULL, 1, NULL);
+    init_uart();
+    init_adc();
+    
+    // Inicializa o módulo HC-06 com o nome e PIN desejados
+    // (Exemplo: nome "aps2_legal" e PIN "1234")
+    // hc06_init("aps2_legal", "1234");
+    
+    char mensagem[64];
+    while (true) {
+        uint16_t adc_x = ler_adc(ADC_CHANNEL_X);
+        uint16_t adc_y = ler_adc(ADC_CHANNEL_Y);
 
-    vTaskStartScheduler();
+        int dx = (int)adc_x - ADC_CENTRAL;
+        int dy = (int)adc_y - ADC_CENTRAL;
 
-    while (true)
-        ;
+        if(abs(dx) < DEADZONE) dx = 0;
+        if(abs(dy) < DEADZONE) dy = 0;
+
+        // sprintf(mensagem, "abs dy: %d", abs(dy));
+
+        int x = dx / 50;
+        int y = dy / 50;
+
+        // Monte a mensagem para envio. Formato: ANALOG,x,y\n
+        sprintf(mensagem, "ANALOG,%d,%d\r\n", x, y);
+
+        // Envia a mensagem via UART para o computador
+        uart_puts(UART_ID, mensagem);
+
+        sleep_ms(5);  // Envia a cada 50 ms (ajuste conforme necessário)
+
+        // Envia a string de teste "OLAAA " via UART para o HC-06
+        // uart_puts(HC06_UART, "OLAAA ");
+        
+        // Se desejar, você pode ler o pino STATE para verificar se está conectado
+        // Exemplo:
+        // bool connected = gpio_get(HC06_STATE_PIN);
+        // printf("Estado Bluetooth: %s\n", connected ? "Conectado" : "Desconectado");
+        
+        // sleep_ms(100);  // Aguarda 100 ms entre os envios
+    }
+    
+    return 0;
 }
