@@ -158,7 +158,6 @@ static void setup_io(void)
     gpio_set_dir(ENC_B_PIN, GPIO_IN);
     gpio_pull_up(ENC_A_PIN);
     gpio_pull_up(ENC_B_PIN);
-    int initial_state = (gpio_get(ENC_A_PIN) << 1) | gpio_get(ENC_B_PIN);
     // Inicializa o estado na própria função de callback
     encoder_gpio_callback(0, 0);
     gpio_set_irq_enabled_with_callback(
