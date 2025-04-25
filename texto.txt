@@ -1,0 +1,16 @@
+sudo systemctl enable bluetooth
+sudo systemctl start bluetooth
+
+pair 00:22:04:01:7A:9F
+
+[bluetooth]# pair 00:22:04:01:7A:9F
+Attempting to pair with 00:22:04:01:7A:9F
+Failed to pair: org.bluez.Error.AlreadyExists
+
+
+
+trust 00:22:04:01:7A:9F
+connect 00:22:04:01:7A:9F
+
+
+sudo rfcomm bind /dev/rfcomm0 00:22:04:01:7A:9F 1
