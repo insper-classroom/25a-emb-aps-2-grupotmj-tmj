@@ -64,14 +64,14 @@ flowchart TD
     C --> C3
 
     %% Entradas (cada linha uma ligação)
-    A1[MPU6050 (I2C)] --> C1
-    A2[Encoder (IRQ via GPIO)] --> C1
-    A3[Botões Aim e Fire (GPIO)] --> C1
+    A1[MPU6050 - I2C] --> C1
+    A2[Encoder - IRQ via GPIO] --> C1
+    A3[Botões Aim e Fire - GPIO] --> C1
 
     %% Saídas
     C1 --> D[Filas]
     D --> C2
-    C3 --> E[LEDs RGB (PWM)]
+    C3 --> E[LEDs RGB - PWM]
     C2 --> F[UART/HC06]
 
     %% IRQs com estilo diferente
