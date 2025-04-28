@@ -45,6 +45,13 @@ O jogo escolhido foi: https://www.crazygames.com.br/jogos/air-wars-3
 - **PWM:**  
   - Controle dos LEDs RGB para feedback visual.
 
+## Links
+- **Fotos do controle**
+    - https://alinsperedu-my.sharepoint.com/:f:/g/personal/cauepda_al_insper_edu_br/Eh55f68sAJZHt-FpVFuG0BgB8PoqJ4LGoQFnsaZ3iRgHAg?e=5fFrvJ
+
+- **Vídeo de apresentação**
+    - https://youtu.be/-naJOzBf-Ro
+
 ## Diagrama de Blocos do Firmware
 
 ```mermaid
