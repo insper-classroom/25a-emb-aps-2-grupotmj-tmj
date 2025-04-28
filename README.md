@@ -80,5 +80,5 @@ flowchart TD
     %% Links clicáveis (GitHub suporta click)
     click A1 "hardware/i2c.h" "Sensor MPU6050 via I2C"
     click E "hardware/pwm.h" "Controle dos LEDs RGB"
-    click F "hardware/uart.h" "Comunicação via UART / HC06"
+    click F "hardware/uart.h" "Comunicação via UART HC06"
 ```
