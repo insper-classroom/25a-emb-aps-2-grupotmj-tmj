@@ -76,9 +76,4 @@ flowchart TD
 
     %% IRQs com estilo diferente
     G((Encoder IRQ Callback)) -.-> C1
-
-    %% Links clicáveis (GitHub suporta click)
-    click A1 href "hardware/i2c.h" "Sensor MPU6050 via I2C"
-    click E href "hardware/pwm.h" "Controle dos LEDs RGB"
-    click F href "hardware/uart.h" "Comunicação via UART / HC06"
 ```
