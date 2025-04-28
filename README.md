@@ -76,4 +76,5 @@ flowchart TD
 
     %% IRQs com estilo diferente
     G((Encoder IRQ Callback)) -.-> C1
+    END
 ```
