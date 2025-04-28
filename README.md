@@ -5,11 +5,13 @@ Este repositório contém o firmware para o controle de jogo desenvolvido para a
 ## Jogo
 O firmware foi desenvolvido para um controle que simula ações de "boost" (botão W) e "atirar" (botão direito) em um ambiente de jogo. A ideia é utilizar entradas de sensores inerciais e outros dispositivos para interagir com o jogo.
 
+O jogo escolhido foi: https://www.crazygames.com.br/jogos/air-wars-3
+
 ## Ideia do Controle
-- **Objetivo:** Oferecer uma interface para simular ações (como mirar e disparar) utilizando sensores e entradas físicas.
+- **Objetivo:** Oferecer uma interface para simular ações (como boost e disparar) utilizando sensores e entradas físicas.
 - **Funcionalidades:**  
   - Leitura de movimentos e orientação com o sensor MPU6050.
-  - Controle de disparo e mira com botões físicos.
+  - Controle de disparo e boost com botões físicos.
   - Feedback visual com LEDs RGB.
   - Comunicação sem fio com módulo HC-06 via UART para enviar dados do controle ao jogo.
 
