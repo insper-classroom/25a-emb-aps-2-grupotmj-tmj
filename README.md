@@ -3,7 +3,7 @@
 Este repositório contém o firmware para o controle de jogo desenvolvido para a plataforma Raspberry Pi Pico, utilizando FreeRTOS. O firmware gerencia a leitura de sensores, tratamento de entradas e a atualização de saídas visuais, bem como a comunicação serial via UART e HC-06 (Bluetooth).
 
 ## Jogo
-O firmware foi desenvolvido para um controle que simula ações de "mirar" (botão esquerdo) e "atirar" (botão direito) em um ambiente de jogo. A ideia é utilizar entradas de sensores inerciais e outros dispositivos para interagir com o jogo.
+O firmware foi desenvolvido para um controle que simula ações de "boost" (botão W) e "atirar" (botão direito) em um ambiente de jogo. A ideia é utilizar entradas de sensores inerciais e outros dispositivos para interagir com o jogo.
 
 ## Ideia do Controle
 - **Objetivo:** Oferecer uma interface para simular ações (como mirar e disparar) utilizando sensores e entradas físicas.
@@ -21,7 +21,7 @@ O firmware foi desenvolvido para um controle que simula ações de "mirar" (bot�
 - **Encoder:**  
   - Entradas digitais para capturar a rotação (pinos 2 e 3) utilizando IRQ para detecção de mudanças.
 - **Botões:**  
-  - Botão A (boost): pino 17, acionado para "dar o boost".
+  - Botão A (boost): pino 17, acionado para "boost".
   - Botão B (fire): pino 18, acionado para "atirar".
 
 ### Outputs (Atuadores)
