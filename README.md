@@ -46,39 +46,39 @@ O firmware foi desenvolvido para um controle que simula ações de "mirar" (bot�
 ## Diagrama de Blocos do Firmware
 
 ```mermaid
-flowchart TD;
+flowchart TD
     %% Setup
-    A[Setup & Inicialização] --> B[Configuração de IO];
-    B --> C[Criação de Tasks];
+    A[Setup & Inicialização] --> B[Configuração de IO]
+    B --> C[Criação de Tasks]
 
     %% Definição do subgráfico
-    subgraph "Tarefas FreeRTOS";
-        C1[mpu_task];
-        C2[uart_task];
-        C3[led_task];
-    end;
+    subgraph "Tarefas FreeRTOS"
+        C1[mpu_task]
+        C2[uart_task]
+        C3[led_task]
+    end
 
     %% Conexão do grafo principal
-    C --> C1;
-    C --> C2;
-    C --> C3;
+    C --> C1
+    C --> C2
+    C --> C3
 
     %% Entradas (cada linha uma ligação)
-    A1[MPU6050 (I2C)] --> C1;
-    A2[Encoder (IRQ via GPIO)] --> C1;
-    A3[Botões Aim e Fire (GPIO)] --> C1;
+    A1[MPU6050 (I2C)] --> C1
+    A2[Encoder (IRQ via GPIO)] --> C1
+    A3[Botões Aim e Fire (GPIO)] --> C1
 
     %% Saídas
-    C1 --> D[Filas];
-    D --> C2;
-    C3 --> E[LEDs RGB (PWM)];
-    C2 --> F[UART/HC06];
+    C1 --> D[Filas]
+    D --> C2
+    C3 --> E[LEDs RGB (PWM)]
+    C2 --> F[UART/HC06]
 
     %% IRQs com estilo diferente
-    G((Encoder IRQ Callback)) -.-> C1;
+    G((Encoder IRQ Callback)) -.-> C1
 
     %% Links clicáveis (GitHub suporta click)
-    click A1 "hardware/i2c.h" "Sensor MPU6050 via I2C";
-    click E "hardware/pwm.h" "Controle dos LEDs RGB";
-    click F "hardware/uart.h" "Comunicação via UART / HC06";
+    click A1 "hardware/i2c.h" "Sensor MPU6050 via I2C"
+    click E "hardware/pwm.h" "Controle dos LEDs RGB"
+    click F "hardware/uart.h" "Comunicação via UART / HC06"
 ```
